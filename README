@@ -1,0 +1,17 @@
+Configuration File
+==================
+Please update the configuration file paths to point to where your
+bundle-chroot-builder and clr-bundles directories are on the system.
+
+The builder configuration file can be found in:
+	/usr/share/defaults/bundle-chroot-builder/
+By default, the builder will use the config in here, but can be overridden by
+one placed in /etc/bundle-chroot-builder/, or specified with -c/--config.
+
+Running The Builder
+===================
+To build version 10 chroots:
+	./bundle-chroot-builder.py 10
+
+To build version 10 chroots using a custom configuration file
+	./bundle-chroot-builder -c /path/to/builder.conf 10

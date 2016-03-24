@@ -271,6 +271,32 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     for r in results_list:
         r.get()
 
+    """Read the URL values from builder.conf and insert them into os-core-update to swupd knows where to pull content from"""
+    buildconf='/usr/share/defaults/bundle-chroot-builder/builder.conf'
+    if os.path.isfile('/etc/bundle-chroot-builder/builder.conf'):
+        buildconf = '/etc/bundle-chroot-builder/builder.conf'
+    if args.config:
+        buildconf = args.config
+    config = configparser.ConfigParser()
+    config.read(buildconf)
+
+    """Read the configuration file for our script values"""
+    conf = config['URL']
+    url = conf['URL']
+    contenturl = conf['CONTENTURL']
+    versionurl = conf['VERSIONURL']
+    formatname = conf['FORMAT']
+
+    os.mkdir(out_dir + "/os-core-update/usr/share/defaults/swupd/")
+    with open(out_dir + "/os-core-update/usr/share/defaults/swupd/url", "w") as file:
+        file.writelines(url)
+    with open(out_dir + "/os-core-update/usr/share/defaults/swupd/contenturl", "w") as file:
+        file.writelines(contenturl)
+    with open(out_dir + "/os-core-update/usr/share/defaults/swupd/versionurl", "w") as file:
+        file.writelines(versionurl)
+    with open(out_dir + "/os-core-update/usr/share/defaults/swupd/format", "w") as file:
+        file.writelines(formatname)
+
     print("Creating package to file mappings")
     package_mapping = {}
     map_files = [f for f in os.listdir(out_dir) if f.startswith("pkgmap-")]

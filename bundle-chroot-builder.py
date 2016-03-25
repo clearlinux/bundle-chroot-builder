@@ -283,15 +283,13 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     """Read the configuration file for our script values"""
     conf = config['swupd']
     bundlename = conf['BUNDLE']
-    url = conf['URL']
     contenturl = conf['CONTENTURL']
     versionurl = conf['VERSIONURL']
     formatname = conf['FORMAT']
 
-    confpath = os.path.join(out_dir, bundlename, "/usr/share/defaults/swupd/")
+    """Do not add a leading slash on anything except the first variable in os.path.join!"""
+    confpath = os.path.join(out_dir, bundlename, "usr/share/defaults/swupd/")
     os.mkdir(confpath)
-    with open(os.path.join(confpath, "url"), "w") as file:
-        file.writelines(url)
     with open(os.path.join(confpath, "contenturl"), "w") as file:
         file.writelines(contenturl)
     with open(os.path.join(confpath, "versionurl"), "w") as file:

@@ -56,6 +56,11 @@ def read_config(args):
     config = configparser.ConfigParser()
     config.read(buildconf)
 
+    for option in ['SERVER_STATE_DIR', 'BUNDLE_DIR', 'YUM_CONF']:
+            if config.has_option('Builder', option) == False:
+                print("ERROR:\nbuilder.conf is missing:\n[Builder]\n%s\n" % option)
+                exit(1)
+
     """Read the configuration file for our script values"""
     conf = config['Builder']
     state_dir = conf['SERVER_STATE_DIR']
@@ -281,6 +286,10 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     config.read(buildconf)
 
     """Read the configuration file for our script values"""
+    for option in ['BUNDLE', 'CONTENTURL', 'VERSIONURL', 'FORMAT']:
+        if config.has_option('swupd', option) == False:
+            print("ERROR:\nbuilder.conf is missing:\n[swupd]\n%s\n" % option)
+            exit(1)
     conf = config['swupd']
     bundlename = conf['BUNDLE']
     contenturl = conf['CONTENTURL']
@@ -289,7 +298,7 @@ def create_chroots(args, state_dir, bundles, yum_conf):
 
     """Do not add a leading slash on anything except the first variable in os.path.join!"""
     confpath = os.path.join(out_dir, bundlename, "usr/share/defaults/swupd/")
-    os.mkdir(confpath)
+    os.makedirs(confpath, exist_ok=True)
     with open(os.path.join(confpath, "contenturl"), "w") as file:
         file.writelines(contenturl)
     with open(os.path.join(confpath, "versionurl"), "w") as file:

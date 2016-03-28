@@ -72,12 +72,14 @@ def read_config(args):
 
 def install_bundle(out_dir, postfix, bundle, bundles, yum_cmd):
     """Helper function to yum install a bundle"""
-    m4 = subprocess.Popen(["m4", bundles + "/" + bundle], cwd=bundles, stdout=subprocess.PIPE)
-    m4.wait()
-    pkgs = m4.stdout.readlines()
+    lines = []
+    with subprocess.Popen(["m4", bundles + "/" + bundle], cwd=bundles, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            lines.append(line)
+
+    pkgs = "".join(lines)
     to_install = []
-    for pkg in pkgs:
-        pkg = pkg.decode("utf-8").strip()
+    for pkg in pkgs.splitlines():
         # Don't add blank lines or lines with leading '#'
         if len(pkg) == 0 or pkg[0] == "#":
             continue

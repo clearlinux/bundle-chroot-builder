@@ -80,6 +80,7 @@ def install_bundle(out_dir, postfix, bundle, bundles, yum_cmd):
     pkgs = "".join(lines)
     to_install = []
     for pkg in pkgs.splitlines():
+        pkg = pkg.strip()
         # Don't add blank lines or lines with leading '#'
         if len(pkg) == 0 or pkg[0] == "#":
             continue

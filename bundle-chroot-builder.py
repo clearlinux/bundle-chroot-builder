@@ -163,7 +163,9 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     with open(state_dir + "/server.ini", "w+") as serverini:
         serverini.write("[Server]\nemptydir=" + state_dir + "/empty/\nimagebase=" + state_dir + "/image/\noutputdir=" + state_dir + "/www/\n")
     with open(state_dir + "/groups.ini", "w+") as groupsini:
-        for bundle in os.listdir(bundles):
+        bundle_list = os.listdir(bundles)
+        bundle_list = trim_bundles(bundle_list)
+        for bundle in bundle_list:
             groupsini.write("[" + bundle + "]\ngroup=" + bundle + "\n\n")
 
     """Setup chroots for bundles"""
@@ -261,6 +263,7 @@ def create_chroots(args, state_dir, bundles, yum_conf):
 
     bundle_list = os.listdir(bundles)
     bundle_list.remove('os-core')
+    bundle_list = trim_bundles(bundle_list)
     pool = multiprocessing.Pool()
     results_list = []
 
@@ -364,7 +367,9 @@ def create_chroots(args, state_dir, bundles, yum_conf):
             versions_output.append("{0: <50}{1}\n".format(name, pver))
     with open(web_dir + "versions", "w") as file:
         file.writelines(versions_output)
-    for bundle in os.listdir(bundles):
+    bundle_list = os.listdir(bundles)
+    bundle_list = trim_bundles(bundle_list)
+    for bundle in bundle_list:
         shutil.copyfile(out_dir + "/packages-{}".format(bundle), web_dir + "/noship/packages-{}".format(bundle))
         if os.path.isfile(out_dir + "/{}-includes".format(bundle)):
             shutil.copyfile(out_dir + "/{}-includes".format(bundle), web_dir + "/noship/{}-includes".format(bundle))
@@ -372,6 +377,12 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         shutil.copyfile(out_dir + "/files-{}".format(package_name),
                         web_dir + "/noship/files-{}".format(package_name))
 
+# Remove bundles with blacklisted characters, such as dot files
+def trim_bundles(bundles):
+    for bundle in bundles:
+        if bundle.startswith('.'):
+            bundles.remove(bundle)
+    return bundles
 
 def main():
     """Entry point for chroot creator"""

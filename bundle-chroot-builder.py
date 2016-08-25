@@ -302,15 +302,19 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     versionurl = conf['VERSIONURL']
     formatname = conf['FORMAT']
 
+    print("Adding SWUPD default values to '{}' bundle...".format(bundlename))
     """Do not add a leading slash on anything except the first variable in os.path.join!"""
     confpath = os.path.join(out_dir, bundlename, "usr/share/defaults/swupd/")
     os.makedirs(confpath, exist_ok=True)
     with open(os.path.join(confpath, "contenturl"), "w") as file:
         file.writelines(contenturl)
+    print("  contenturl: {}".format(contenturl))
     with open(os.path.join(confpath, "versionurl"), "w") as file:
         file.writelines(versionurl)
+    print("  versionurl: {}".format(versionurl))
     with open(os.path.join(confpath, "format"), "w") as file:
         file.writelines(formatname)
+    print("  format: {}".format(formatname))
 
     print("Creating package to file mappings")
     package_mapping = {}

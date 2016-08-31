@@ -321,14 +321,14 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         # real package's filename I'm using it instead of recursing through
         # temporary per bundle folders
         package_name = map_file[map_file.find(" * ") + 3:-len(".src.rpm")]
-        with open(out_dir + "/" +  map_file, "r") as file:
+        with open(out_dir + "/" +  map_file, "rb") as file:
             path_list = file.readlines()
         if package_name not in package_mapping:
             package_mapping[package_name] = set()
         for path in path_list:
             package_mapping[package_name].add(path)
     for package_name, paths in package_mapping.items():
-        with open(out_dir + "/files-{}".format(package_name), "w") as file:
+        with open(out_dir + "/files-{}".format(package_name), "wb") as file:
             file.writelines(sorted(paths))
     for map_file in map_files:
         os.unlink(out_dir + "/" + map_file)

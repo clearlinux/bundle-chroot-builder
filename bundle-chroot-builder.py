@@ -342,16 +342,17 @@ def create_chroots(args, state_dir, bundles, yum_conf):
 
     print("Cleaning package list")
     web_dir = state_dir + "/www/" + out_version + "/"
+    image_dir = state_dir + "/image/" + out_version + "/"
     if os.path.isdir(web_dir):
         print("  removing pre-existing {} before setting version file" .format(web_dir))
         os.system('rm -rf '+web_dir)
     # FIXME: Figure out problems with the below to replace the above.
     # Consider all uses of os.system("rm -fr") as FIXMEs of the same variety.
-    # if os.path.isdir(web_dir):
+    # if os.path.isdir(image_dir):
     #     print("  removing pre-existing {} before setting version file"
-    #           .format(web_dir))
-    #     shutil.rmtree(web_dir)
-    os.makedirs(web_dir + '/noship')
+    #           .format(imagedir())
+    #     shutil.rmtree(image_dir)
+    os.makedirs(image_dir + '/noship')
     versions_output = []
     with open(out_dir + "/versions", "r") as file:
         versions = set()
@@ -369,17 +370,17 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         versions_output.append("{0: <50}{1}\n".format("Available", "Packages"))
         for name, pver in [line.split(":") for line in versions]:
             versions_output.append("{0: <50}{1}\n".format(name, pver))
-    with open(web_dir + "versions", "w") as file:
+    with open(image_dir + "versions", "w") as file:
         file.writelines(versions_output)
     bundle_list = os.listdir(bundles)
     bundle_list = trim_bundles(bundle_list)
     for bundle in bundle_list:
-        shutil.copyfile(out_dir + "/packages-{}".format(bundle), web_dir + "/noship/packages-{}".format(bundle))
+        shutil.copyfile(out_dir + "/packages-{}".format(bundle), image_dir + "/noship/packages-{}".format(bundle))
         if os.path.isfile(out_dir + "/{}-includes".format(bundle)):
-            shutil.copyfile(out_dir + "/{}-includes".format(bundle), web_dir + "/noship/{}-includes".format(bundle))
+            shutil.copyfile(out_dir + "/{}-includes".format(bundle), image_dir + "/noship/{}-includes".format(bundle))
     for package_name in package_mapping.keys():
         shutil.copyfile(out_dir + "/files-{}".format(package_name),
-                        web_dir + "/noship/files-{}".format(package_name))
+                        image_dir + "/noship/files-{}".format(package_name))
 
 # Remove bundles with blacklisted characters, such as dot files
 def trim_bundles(bundles):

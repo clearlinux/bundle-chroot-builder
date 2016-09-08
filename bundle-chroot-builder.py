@@ -177,8 +177,8 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         out_version = args.version
     build_version = args.version
 
-    if os.path.exists(state_dir + "/image/latest.version") == False:
-        with open(state_dir + "/image/latest.version", "w") as latestver:
+    if os.path.exists(state_dir + "/image/LAST_VER") == False:
+        with open(state_dir + "/image/LAST_VER", "w") as latestver:
             latestver.write("0\n")
 
     config = configparser.ConfigParser()

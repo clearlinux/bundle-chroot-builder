@@ -54,6 +54,7 @@ def read_config(args):
     if args.config:
         buildconf = args.config
     config = configparser.ConfigParser()
+    print("Reading from %s" % buildconf)
     config.read(buildconf)
 
     for option in ['SERVER_STATE_DIR', 'BUNDLE_DIR', 'YUM_CONF']:

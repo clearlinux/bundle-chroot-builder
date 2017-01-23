@@ -331,6 +331,10 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         if package_name not in package_mapping:
             package_mapping[package_name] = set()
         for path in path_list:
+            # RPM prints out a specific string for subpackages that contain no
+            # files. It should be excluded from the SRPM file list.
+            if re.match(br"\(contains no files\)\n", path):
+                continue
             package_mapping[package_name].add(path)
     for package_name, paths in package_mapping.items():
         with open(out_dir + "/files-{}".format(package_name), "wb") as file:

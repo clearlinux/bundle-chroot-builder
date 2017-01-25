@@ -77,6 +77,10 @@ def install_bundle(out_dir, postfix, bundle, bundles, yum_cmd):
     with subprocess.Popen(["m4", bundles + "/" + bundle], cwd=bundles, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         for line in p.stdout:
             lines.append(line)
+    if bundle != "os-core":
+        with subprocess.Popen(["m4", bundles + "/os-core"], cwd=bundles, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+            for line in p.stdout:
+                lines.append(line)
 
     pkgs = "".join(lines)
     to_install = []
@@ -86,7 +90,15 @@ def install_bundle(out_dir, postfix, bundle, bundles, yum_cmd):
         if len(pkg) == 0 or pkg[0] == "#":
             continue
         to_install.append(pkg)
-    subprocess.check_output(yum_cmd + ["--installroot={0}/{1}" .format(out_dir, postfix), "install"] + to_install)
+
+    os.makedirs("{0}/{1}/var/lib/rpm".format(out_dir, bundle))
+    subprocess.check_output(["rpm", "--root", "{0}/{1}".format(out_dir, bundle), "--initdb"])
+    subprocess.check_output(yum_cmd + ["--installroot={0}/{1}".format(out_dir, bundle), "clean", "all"])
+    subprocess.check_output(yum_cmd + ["--installroot={0}/{1}".format(out_dir, bundle), "install", "filesystem"])
+    subprocess.check_output(yum_cmd + ["--installroot={0}/{1}".format(out_dir, bundle), "install"] + to_install)
+
+    os.makedirs("{0}/{1}/usr/share/clear/bundles".format(out_dir, bundle), exist_ok=True)
+
     includes = []
     with open(bundles + "/" + bundle, "r") as bfile:
         for line in bfile.readlines():
@@ -99,7 +111,6 @@ def install_bundle(out_dir, postfix, bundle, bundles, yum_cmd):
 
 
 def process_bundle(out_dir, bundle, bundles, yum_cmd):
-    subprocess.check_output(["cp", "-a", "--preserve=all", "{}/os-core".format(out_dir), "{0}/{1}".format(out_dir, bundle)])
     install_bundle(out_dir, bundle, bundle, bundles, yum_cmd)
     with open(out_dir + "/packages-{}".format(bundle), "w") as file:
         subprocess.Popen(['rpm', '--root={0}/{1}'.format(out_dir, bundle),
@@ -219,29 +230,15 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     print("  based on bundles from: {}".format(bundles))
     print("  and yum config: {}".format(yum_conf))
 
-    print("Creating os-core bundle")
-    os.makedirs(out_dir + "/os-core/var/lib/rpm")
-
-    print("Initializing rpm database")
-    subprocess.check_output(["rpm", "--root", "{}/os-core".format(out_dir), "--initdb"])
-
-    print("Cleaning yum cache")
-    subprocess.check_output(yum_cmd + ["--installroot={}/os-core".format(out_dir), "clean", "all"])
-
-    print("Yum installing os-core filesystem")
-    subprocess.check_output(yum_cmd + ["--installroot={}/os-core".format(out_dir), "install", "filesystem"])
-
     print("Yum installing packages from os-core")
     install_bundle(out_dir, "os-core", "os-core", bundles, yum_cmd)
 
-    os.makedirs(out_dir + "/os-core/usr/share/clear", exist_ok=True)
     with open(out_dir + "/os-core/usr/share/clear/version", "w") as file:
         file.writelines([out_version])
     with open(out_dir + "/os-core/usr/share/clear/versionstamp", "w") as file:
         file.writelines([str(int(time.time()))])
 
     bundle_prefix = out_dir + "/os-core/usr/share/clear/bundles/"
-    os.makedirs(bundle_prefix)
     with open(bundle_prefix + "os-core", "a"):
         os.utime(bundle_prefix + "os-core", None)
 

@@ -74,9 +74,13 @@ def read_config(args):
 def install_bundle(out_dir, postfix, bundle, bundles, yum_cmd):
     """Helper function to yum install a bundle"""
     lines = []
-    with subprocess.Popen(["m4", bundles + "/" + bundle], cwd=bundles, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
-        for line in p.stdout:
-            lines.append(line)
+    try:
+        output = subprocess.check_output(["m4", bundles + "/" + bundle], cwd=bundles, bufsize=1, universal_newlines=True)
+    except subprocess.CalledProcessError as e:
+        print('ERROR {0}: m4 failed on {1}/{2}'.format(e.returncode, bundles, bundle))
+        raise
+    for line in output:
+        lines.append(line)
 
     pkgs = "".join(lines)
     to_install = []

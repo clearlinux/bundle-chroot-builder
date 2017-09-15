@@ -47,16 +47,21 @@ def handle_options():
     return args
 
 
-def read_config(args):
+def get_config(args):
     buildconf='/usr/share/defaults/bundle-chroot-builder/builder.conf'
     if os.path.isfile('/etc/bundle-chroot-builder/builder.conf'):
         buildconf = '/etc/bundle-chroot-builder/builder.conf'
     if args.config:
         buildconf = args.config
+
     config = configparser.ConfigParser()
     print("Reading from %s" % buildconf)
     config.read(buildconf)
+    return config
 
+
+def read_config(args):
+    config = get_config(args)
     for option in ['SERVER_STATE_DIR', 'BUNDLE_DIR', 'YUM_CONF']:
             if config.has_option('Builder', option) == False:
                 print("ERROR:\nbuilder.conf is missing:\n[Builder]\n%s\n" % option)
@@ -151,6 +156,37 @@ def clean_bundle(out_dir, bundle, bundles, yum_cmd):
     os.chdir(prev_dir)
 
 
+def write_default_server_ini(state_dir, server_conf):
+    """
+    Write default server.ini file in the state dir in the following format
+
+    [Server]
+    emptydir={state_dir}/empty/
+    imagebase={state_dir}/image/
+    outputdir={state_dir}/www/
+
+    [Debuginfo]
+    banned=true
+    lib=/usr/lib/debug/
+    src=/usr/src/debug/
+    """
+    contents = ("[Server]\n"
+                "emptydir={0}/empty/\n"
+                "imagebase={0}/image/\n"
+                "outputdir={0}/www/\n".format(state_dir))
+    if server_conf:
+        contents += ("\n[Debuginfo]\n"
+                    "banned={}\n"
+                    "lib={}\n"
+                    "src={}\n"
+                    .format(server_conf.get('debuginfo_banned'),
+                            server_conf.get('debuginfo_lib'),
+                            server_conf.get('debuginfo_src')))
+
+    with open(state_dir + "/server.ini", "w+") as serverini:
+        serverini.write(contents)
+
+
 def create_chroots(args, state_dir, bundles, yum_conf):
     """The state_dir should always be created if it does not exist"""
     if os.path.isdir(state_dir) == False:
@@ -164,14 +200,15 @@ def create_chroots(args, state_dir, bundles, yum_conf):
     if os.path.isdir(state_dir + "/www/0") == False:
         os.makedirs(state_dir + "/www/0")
 
-    """Create server.ini and groups.ini for create_update later on"""
-    with open(state_dir + "/server.ini", "w+") as serverini:
-        serverini.write("[Server]\nemptydir=" + state_dir + "/empty/\nimagebase=" + state_dir + "/image/\noutputdir=" + state_dir + "/www/\n")
+    # Create server.ini and groups.ini for create_update later on
+    config = get_config(args)
+    config = config['Server'] if 'Server' in config else {}
+    write_default_server_ini(state_dir, config)
     with open(state_dir + "/groups.ini", "w+") as groupsini:
         bundle_list = os.listdir(bundles)
         bundle_list = trim_bundles(bundle_list)
         for bundle in bundle_list:
-            groupsini.write("[" + bundle + "]\ngroup=" + bundle + "\n\n")
+            groupsini.write("[{0}]\ngroup={0}\n\n".format(bundle))
 
     """Setup chroots for bundles"""
     bversion = ""
@@ -288,13 +325,7 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         r.get()
 
     """Read the URL values from builder.conf and insert them into os-core-update to swupd knows where to pull content from"""
-    buildconf='/usr/share/defaults/bundle-chroot-builder/builder.conf'
-    if os.path.isfile('/etc/bundle-chroot-builder/builder.conf'):
-        buildconf = '/etc/bundle-chroot-builder/builder.conf'
-    if args.config:
-        buildconf = args.config
-    config = configparser.ConfigParser()
-    config.read(buildconf)
+    config = get_config(args)
 
     """Read the configuration file for our script values"""
     for option in ['BUNDLE', 'CONTENTURL', 'VERSIONURL', 'FORMAT']:

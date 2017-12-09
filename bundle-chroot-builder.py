@@ -25,6 +25,7 @@ import argparse
 import configparser
 import os
 import os.path
+import io
 import platform
 import re
 import shutil
@@ -54,9 +55,20 @@ def get_config(args):
     if args.config:
         buildconf = args.config
 
-    config = configparser.ConfigParser()
     print("Reading from %s" % buildconf)
-    config.read(buildconf)
+    cfg_txt = ""
+    # Check that the environment variables in the config file are valid
+    pattern = re.compile("\$\{?(\w+)\}?")
+    for i, line in enumerate(open(buildconf, 'r')):
+        for match in re.finditer(pattern, line):
+            if not match.group(1) in os.environ:
+                print("ERROR:\nbuilder.conf contains an undefined environment variable: %s on line %s\n"
+                        % (i+1, match.group(1)))
+                exit(1)
+        cfg_txt += os.path.expandvars(line)
+
+    config = configparser.ConfigParser()
+    config.readfp(io.StringIO(cfg_txt))
     return config
 
 

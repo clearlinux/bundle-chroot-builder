@@ -1,3 +1,23 @@
+Building this Project
+=====================
+For help using automake see
+http://www.gnu.org/software/automake/manual/html_node/index.html
+
+Configure:
+    aclocal
+    autoconf
+    automake --add-missing
+    # Defaults to /usr/local or specific --prefix=/usr
+    # to overwrite the installed version
+    ./configure
+
+Build:
+    make
+
+Install:
+    make -n install
+    sudo make install
+
 Configuration File
 ==================
 Please update the configuration file paths to point to where your

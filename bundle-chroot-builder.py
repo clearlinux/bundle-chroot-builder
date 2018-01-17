@@ -254,7 +254,7 @@ def create_chroots(args, state_dir, bundles, yum_conf):
         packager = ["dnf"]
     else:
         packager = ["yum"]
-    yum_cmd = packager + ["--config={}".format(yum_conf), "-y", "--noplugins", "--releasever={}".format(build_version)]
+    yum_cmd = packager + ["--config={}".format(yum_conf), "-y", "--releasever={}".format(build_version)]
     if 'local' in config == False:
         try:
             urllib.request.urlopen(conf_baseurl)

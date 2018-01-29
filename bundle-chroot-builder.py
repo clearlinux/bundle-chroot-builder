@@ -300,7 +300,7 @@ def create_chroots(args, state_dir, bundles, yum_conf):
 
     print("Noting os-core package list")
     with open(out_dir + "/versions", "w") as file:
-        subprocess.Popen(yum_cmd + ["--installroot={}/os-core".format(out_dir), "list"], stdout=file).wait()
+        subprocess.Popen(yum_cmd + ["--quiet", "--installroot={}/os-core".format(out_dir), "list"], stdout=file).wait()
     with open(out_dir + "/packages-os-core", "w") as file:
         subprocess.Popen(['rpm', '--root={}/os-core'.format(out_dir),
                           '-qa', '--queryformat', '%{NAME}\t%{SOURCERPM}\n'], stdout=file).wait()

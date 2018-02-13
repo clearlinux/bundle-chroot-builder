@@ -249,7 +249,16 @@ def create_chroots(args, state_dir, bundles, yum_conf):
 
     out_dir = state_dir + "/image/" + out_version
 
-    if platform.dist()[0] == "fedora" and int(platform.dist()[1]) >= 22:
+    try:
+        with open("/usr/share/clear/version", "r") as verfile:
+            clrver = int(verfile.read().strip())
+    except Exception:
+        clrver = None
+
+    if clrver and clrver > 20650:
+        print("using dnf on clr")
+        packager = ["dnf"]
+    elif platform.dist()[0] == "fedora" and int(platform.dist()[1]) >= 22:
         print("using dnf instead of yum")
         packager = ["dnf"]
     else:
